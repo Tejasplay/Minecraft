@@ -112,7 +112,29 @@
         document.getElementById('username').focus();  
         console.log("%c[Demo] Open console (F12) to see entered username & password", "color:#666");  
     };  
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB4v_8Td81d4scU_8-6IuBtSZKRQA-Siw4",
+authDomain: "github-494be.firebaseapp.com",
+projectId: "github-494be",
+storageBucket: "github-494be.firebasestorage.app",
+messagingSenderId: "701947832539",
+appId: "1:701947832539:web:e54ae0a20d33c398b9c4fe"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Yahan se tumhara Three.js code start
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js';
+
+// baaki code...
+
 </script>
 
 </body>  
-  </html>
+</html>
