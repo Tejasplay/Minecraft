@@ -128,8 +128,23 @@ appId: "1:701947832539:web:e54ae0a20d33c398b9c4fe"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// Yahan se tumhara Three.js code start
+async function saveData(text, result) {
+  try {
+    await addDoc(collection(db, "students"), {
+      calculation: text,
+      result: result,
+      time: new Date().toISOString()
+    });
+
+    console.log("Data Saved");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js';
 
 // baaki code...
